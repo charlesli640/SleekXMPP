@@ -13,8 +13,9 @@ import sys
 import logging
 import getpass
 from optparse import OptionParser
-
 import sleekxmpp
+from sleekxmpp.xmlstream import ElementBase
+from xml.etree import cElementTree as ET
 
 # Python versions before 3.0 do not use UTF-8 encoding
 # by default. To ensure that Unicode is handled properly
@@ -123,6 +124,18 @@ class MUCBot(sleekxmpp.ClientXMPP):
                         documentation for the Presence stanza
                         to see how else it may be used.
         """
+        #print("muc_online presence={}".format(presence))
+
+        # According to XMPP protocol
+        # https://xmpp.org/extensions/xep-0045.html#createroom-instant
+        # when room created, it is locked by default
+        # below iq unlock the room to allow other clients join
+        query = ET.Element('{http://jabber.org/protocol/muc#owner}query')
+        x = ET.Element('{jabber:x:data}x', type='submit')
+        query.append(x)
+        iq = self.make_iq_set(sub=query, ito=self.room)
+        iq.send(timeout=60)
+
         if presence['muc']['nick'] != self.nick:
             self.send_message(mto=presence['from'].bare,
                               mbody="Hello, %s %s" % (presence['muc']['role'],

@@ -69,8 +69,12 @@ def extract_names(raw_cert):
         if oid != SUBJECT_ALT_NAME:
             continue
 
-        value = decoder.decode(extension.getComponentByName('extnValue'),
-                               asn1Spec=OctetString())[0]
+        # Charles Fix: No need to decode on extnValue
+        # https://github.com/etingof/pyasn1/issues/112
+
+        #value = decoder.decode(extension.getComponentByName('extnValue'),
+        #                       asn1Spec=OctetString())[0]
+        value = extension.getComponentByName('extnValue')
         sa_names = decoder.decode(value, asn1Spec=SubjectAltName())[0]
         for name in sa_names:
             name_type = name.getName()
